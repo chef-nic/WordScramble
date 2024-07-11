@@ -14,6 +14,7 @@ struct ContentView: View {
     @State private var errorTitle = ""
     @State private var errorMessage = ""
     @State private var showingError = false
+    @State private var score = 0
     
     var body: some View {
         NavigationStack {
@@ -38,6 +39,12 @@ struct ContentView: View {
             .alert(errorTitle, isPresented: $showingError) { } message: {
                 Text(errorMessage)
             }
+            .toolbar {
+                Text("Score: \(score.description)")
+                Button("New Word") {
+                    startGame()
+                }
+            }
         }
     }
     
@@ -51,6 +58,16 @@ struct ContentView: View {
         let answer = newWord.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         
         guard answer.count > 0 else {return}
+        
+        guard isLongEnough(word: answer) else {
+            wordError(title: "Word too short", message: "Please guess words longer than 3 letters")
+            return
+        }
+        
+        guard isNotStartWord(word: answer) else {
+            wordError(title: "Word not allowed", message: "Guess a word other than the start word")
+            return
+        }
         
         guard isOriginal(word: answer) else {
             wordError(title: "Word used already", message: "Be more original")
@@ -70,7 +87,22 @@ struct ContentView: View {
         withAnimation {
             usedWords.insert(answer, at: 0)
         }
+        
+        updateScore(answer)
+        
         newWord = ""
+    }
+    
+    func updateScore(_ word: String) {
+        score += word.count
+    }
+    
+    func  isNotStartWord(word: String) -> Bool {
+        word != rootWord
+    }
+    
+    func isLongEnough(word: String) -> Bool {
+        word.count > 3
     }
     
     func isOriginal(word: String) -> Bool {
